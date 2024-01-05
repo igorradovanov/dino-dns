@@ -118,6 +118,77 @@ ARCOUNT         an unsigned 16 bit integer specifying the number of
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((ip, port))
 
+def get_flags(flags):
+    
+    byte1 = bytes(flags[0:1])
+    byte2 = bytes(flags[1:2])
+    
+    rflags = ''
+    
+    # Get QR Flag
+    QR = 1
+    
+    # Get OPCODE
+    OPCODE = ''
+    
+    for bit in range(1,5):
+        OPCODE += str(ord(byte1)&(1<<bit))
+        
+    # Get AA Flag
+    
+    AA = '1'
+    
+    # Get TC Flag
+    
+    TC = '0'
+    
+    # Get RD Flag
+    
+    RD = '0'
+    
+    # Get RA Flag
+    
+    RA = '0'
+    
+    # Get Z Flag
+    
+    Z = '000'
+    
+    # Get RCODE Flag
+    
+    RCODE = '0000'
+    
+    return int(QR+OPCODE+AA+TC+RD, 2).to_bytes(2, byteorder='big')+int(RA+Z+RCODE, 2).to_bytes(1, byteorder='big')
+
+def get_question_domain(data):
+    
+    state = 0
+    expected_length = 0
+    domain_string = ''
+    domain_parts = []
+    x = 0
+    y = 0
+    
+    for byte in data:
+        if state == 1:
+            domain_string += chr(byte)
+            if x == expected_length:
+                domain_parts.append(domain_string)
+                domain_string = ''
+                state = 0
+            if byte == 0:
+                domain_parts.append(domain_string)
+                break
+        else:
+            state = 1
+            expected_length = byte
+    x += 1
+    y += 1
+        
+    question_type = data[y+1:y+3]
+            
+    return (domain_parts, question_type)
+
 def build_response(data):
     
     # Transcation ID
@@ -127,7 +198,13 @@ def build_response(data):
         TID += hex(by)[2:]
     
     # Get the Flags
-    flags = data[2:4]
+    flags = get_flags(data[2:4])
+    
+    # Question Count
+    QDCOUNT = b'\x00\x01'
+    
+    # Answer Count
+    get_question_domain(data[12:])
 
 while True: # listen for connections
     data, addr = s.recvfrom(1024)
