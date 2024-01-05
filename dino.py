@@ -47,14 +47,6 @@ AA              Authoritative Answer - this bit is valid in responses,
 
                 Note that the contents of the answer section may have
                 multiple owner names because of aliases.  The AA bit
-
-
-
-Mockapetris                                                    [Page 26]
-
-RFC 1035        Domain Implementation and Specification    November 1987
-
-
                 corresponds to the name which matches the query name, or
                 the first owner name in the answer section.
 
@@ -126,7 +118,20 @@ ARCOUNT         an unsigned 16 bit integer specifying the number of
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((ip, port))
 
-while True:
+def build_response(data):
+    
+    # Transcation ID
+    transaction_id = data[0:2]
+    TID = ''
+    for by in transaction_id:
+        TID += hex(by)[2:]
+    
+    # Get the Flags
+    flags = data[2:4]
+
+while True: # listen for connections
     data, addr = s.recvfrom(1024)
     print(data)
-    print(addr)
+    r = build_response(data)
+    s.sendTo(r, addr) # returns a response to the client in bytes
+    
