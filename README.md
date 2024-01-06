@@ -1,4 +1,4 @@
-# Dino DNS
+# Dino DNS 🦕
 
 This Python program implements DNS server using the UDP protocol based RFC 1035 standard. The server listens for incoming connections, receives data, processes it, and sends a response back to the client based on the Zones and the type of records defined (A, MX or TXT).
 
